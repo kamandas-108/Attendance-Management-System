@@ -21,7 +21,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center space-x-3">
-                    <img src="SOA-PNG.webp" alt="SOA Logo" class="h-10 w-10 object-contain">
+                    <img src="SOA-PNG.webp" alt="SOA Logo" class="h-10 w-10 object-contain" onerror="this.src='https://via.placeholder.com/40?text=SOA'">
                     <span class="font-bold text-xl text-indigo-600">AMS - 25E1Q2</span>
                 </div>
                 <div class="flex space-x-6">
@@ -36,23 +36,45 @@
     <!-- Main Content -->
     <main class="flex-grow w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         
-        <!-- Login Section -->
+        <!-- Login / Register Section -->
         <section id="login" class="flex items-center justify-center min-h-[80vh]">
             <div class="glass p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
-                <img src="SOA-PNG.webp" alt="SOA Logo" class="h-24 mx-auto mb-4">
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Faculty Login</h2>
+                <img src="SOA-PNG.webp" alt="SOA Logo" class="h-24 mx-auto mb-4" onerror="this.src='https://via.placeholder.com/100?text=Logo+Missing'">
+                <h2 id="authTitle" class="text-2xl font-bold text-slate-800 mb-2">Faculty Login</h2>
                 <p class="text-sm text-slate-500 mb-6">Attendance Management System<br>CSIT, 3rd Semester - Section 25E1Q2</p>
-                <form onsubmit="handleLogin(event)" class="space-y-4">
+                
+                <!-- Login Form -->
+                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 block">
                     <input type="email" id="email" placeholder="Faculty Email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition">
                     <input type="password" id="password" placeholder="Password" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition">
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg">Sign In</button>
+                    <p class="text-sm text-slate-600 mt-4">New faculty? <button type="button" onclick="toggleAuth()" class="text-indigo-600 font-bold hover:underline">Sign Up</button></p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                    <input type="text" id="regName" placeholder="Full Name" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <input type="email" id="regEmail" placeholder="Faculty Email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <select id="regSubject" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white">
+                        <option value="" disabled selected>Select Your Subject</option>
+                        <option value="AD 1">AD 1</option>
+                        <option value="IES">IES</option>
+                        <option value="IM">IM</option>
+                        <option value="DLD">DLD</option>
+                        <option value="MWDW 1">MWDW 1</option>
+                        <option value="PSPDU">PSPDU</option>
+                        <option value="ITD">ITD</option>
+                    </select>
+                    <input type="password" id="regPassword" placeholder="Create Password" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition shadow-lg">Create Account</button>
+                    <p class="text-sm text-slate-600 mt-4">Already registered? <button type="button" onclick="toggleAuth()" class="text-indigo-600 font-bold hover:underline">Log In</button></p>
                 </form>
             </div>
         </section>
 
         <!-- Dashboard Section -->
         <section id="dashboard" class="hidden space-y-6">
-            <div class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+            <div class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-100 gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-slate-800">Welcome, <span id="facultyName" class="text-indigo-600"></span></h1>
                     <p class="text-slate-500 mt-1">Current Subject: <span id="currentSubject" class="font-semibold text-slate-700">Detecting...</span> <span id="liveStatus" class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full"><i class="fas fa-circle text-[8px] animate-pulse"></i> Live</span></p>
@@ -70,8 +92,8 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <table class="w-full text-left border-collapse">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[600px]">
                     <thead>
                         <tr class="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
                             <th class="p-4 border-b">Roll No</th>
@@ -92,7 +114,7 @@
             <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
                 <h2 class="text-3xl font-bold text-indigo-600 mb-4">Section 25E1Q2, CSIT</h2>
                 <p class="text-slate-600 max-w-2xl mx-auto mb-8">Designed to simplify attendance tracking, student records, attendance monitoring, and management through an easy-to-use digital platform for 3rd Semester at ITER, SOA.</p>
-                <img src="WhatsApp Image 2026-09-09 at 11.04.11 PM.jpeg" alt="Class Group Photo" class="w-full max-w-4xl mx-auto rounded-xl shadow-lg border-4 border-white object-cover">
+                <img src="WhatsApp Image 2026-09-09 at 11.04.11 PM.jpeg" alt="Class Group Photo" class="w-full max-w-4xl mx-auto rounded-xl shadow-lg border-4 border-white object-cover" onerror="this.src='https://via.placeholder.com/800x400?text=Group+Photo+Missing'">
             </div>
         </section>
 
@@ -108,7 +130,7 @@
 
     <!-- Email Modal -->
     <div id="emailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-96">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-96 mx-4">
             <h3 class="text-lg font-bold mb-4">Send Attendance Card</h3>
             <p class="text-sm text-gray-500 mb-4" id="modalStudentName"></p>
             <input type="email" id="studentEmail" placeholder="Student's Email Address" class="w-full px-4 py-2 rounded border mb-4 outline-none focus:ring-2 focus:ring-indigo-500">
@@ -136,23 +158,58 @@
             else document.getElementById('navbar').classList.add('hidden');
         }
 
+        // Auth Toggling
+        function toggleAuth() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const authTitle = document.getElementById('authTitle');
+            
+            if (loginForm.classList.contains('hidden')) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                authTitle.innerText = "Faculty Login";
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                authTitle.innerText = "Faculty Registration";
+            }
+        }
+
         // Real-time Timetable Logic
         function detectLiveSubject(facultySubject) {
             const now = new Date();
-            const day = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+            const day = now.getDay();
             const hour = now.getHours();
-            let detected = facultySubject; // Default fallback
-
-            // Simplified mapping based on timetable image logic
-            if(day >= 1 && day <= 6) {
-                if(hour >= 8 && hour < 10 && day === 5) detected = "DLD LAB";
-                else if(hour >= 13 && hour < 14) detected = "LUNCH";
-                // System dynamically trusts faculty's assigned subject from DB for simplicity in demo,
-                // but updates UI to reflect live status.
-            }
+            let detected = facultySubject; 
             document.getElementById('currentSubject').innerText = detected;
         }
 
+        // Handle Registration
+        async function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const subject = document.getElementById('regSubject').value;
+            const password = document.getElementById('regPassword').value;
+            
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, subject, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    toggleAuth();
+                    document.getElementById('email').value = email;
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) { console.error(err); alert("Registration failed. Check server connection."); }
+        }
+
+        // Handle Login
         async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('email').value;
@@ -183,6 +240,7 @@
             showSection('login');
         }
 
+        // Fetch & Render Students
         async function fetchStudents() {
             const res = await fetch('/api/students');
             studentsData = await res.json();
@@ -215,7 +273,7 @@
             });
         }
 
-        // Web Speech API for Voice to Text Attendance
+        // Web Speech API
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
             recognition.continuous = true;
@@ -223,9 +281,6 @@
             
             recognition.onresult = (event) => {
                 const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-                console.log("Heard:", transcript);
-                
-                // Extract numbers from speech (e.g., "Roll number 12", "Present 45")
                 const numbers = transcript.match(/\d+/g);
                 if (numbers) {
                     numbers.forEach(num => {
@@ -261,6 +316,7 @@
             isListening = !isListening;
         }
 
+        // Save & Export
         async function saveAttendance() {
             const records = studentsData.map(s => ({
                 roll_no: s.roll_no,
