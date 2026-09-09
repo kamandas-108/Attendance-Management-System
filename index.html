@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management System | Section 25E1Q2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .mic-active { animation: pulse 1.5s infinite; color: #ef4444; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="glass sticky top-0 z-50 shadow-sm hidden" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <img src="SOA-PNG.webp" alt="SOA Logo" class="h-10 w-10 object-contain">
+                    <span class="font-bold text-xl text-indigo-600">AMS - 25E1Q2</span>
+                </div>
+                <div class="flex space-x-6">
+                    <button onclick="showSection('dashboard')" class="hover:text-indigo-600 font-medium transition">Dashboard</button>
+                    <button onclick="showSection('about')" class="hover:text-indigo-600 font-medium transition">About</button>
+                    <button onclick="logout()" class="text-red-500 hover:text-red-700 font-medium transition"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Login Section -->
+        <section id="login" class="flex items-center justify-center min-h-[80vh]">
+            <div class="glass p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
+                <img src="SOA-PNG.webp" alt="SOA Logo" class="h-24 mx-auto mb-4">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Faculty Login</h2>
+                <p class="text-sm text-slate-500 mb-6">Attendance Management System<br>CSIT, 3rd Semester - Section 25E1Q2</p>
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <input type="email" id="email" placeholder="Faculty Email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <input type="password" id="password" placeholder="Password" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg">Sign In</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Welcome, <span id="facultyName" class="text-indigo-600"></span></h1>
+                    <p class="text-slate-500 mt-1">Current Subject: <span id="currentSubject" class="font-semibold text-slate-700">Detecting...</span> <span id="liveStatus" class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full"><i class="fas fa-circle text-[8px] animate-pulse"></i> Live</span></p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="toggleVoice()" id="micBtn" class="bg-slate-100 text-slate-600 p-3 rounded-full hover:bg-slate-200 transition shadow-sm" title="Voice Input (Say Roll Numbers)">
+                        <i class="fas fa-microphone text-xl"></i>
+                    </button>
+                    <button onclick="exportCSV()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-sm font-medium">
+                        <i class="fas fa-download mr-2"></i> Report
+                    </button>
+                    <button onclick="saveAttendance()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium">
+                        <i class="fas fa-save mr-2"></i> Save All
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
+                            <th class="p-4 border-b">Roll No</th>
+                            <th class="p-4 border-b">Student Name</th>
+                            <th class="p-4 border-b text-center">Status</th>
+                            <th class="p-4 border-b text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentList" class="divide-y divide-gray-100">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="hidden space-y-6">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <h2 class="text-3xl font-bold text-indigo-600 mb-4">Section 25E1Q2, CSIT</h2>
+                <p class="text-slate-600 max-w-2xl mx-auto mb-8">Designed to simplify attendance tracking, student records, attendance monitoring, and management through an easy-to-use digital platform for 3rd Semester at ITER, SOA.</p>
+                <img src="WhatsApp Image 2026-09-09 at 11.04.11 PM.jpeg" alt="Class Group Photo" class="w-full max-w-4xl mx-auto rounded-xl shadow-lg border-4 border-white object-cover">
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-slate-800 font-medium">Developed and deployed by Kaman Das ©2026</p>
+            <p class="text-slate-500 text-sm mt-1">Made with Love ❤️</p>
+        </div>
+    </footer>
+
+    <!-- Email Modal -->
+    <div id="emailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-96">
+            <h3 class="text-lg font-bold mb-4">Send Attendance Card</h3>
+            <p class="text-sm text-gray-500 mb-4" id="modalStudentName"></p>
+            <input type="email" id="studentEmail" placeholder="Student's Email Address" class="w-full px-4 py-2 rounded border mb-4 outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex justify-end space-x-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded">Cancel</button>
+                <button onclick="sendEmailCard()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let studentsData = [];
+        let recognition = null;
+        let isListening = false;
+        let activeRollForEmail = null;
+
+        // Routing
+        function showSection(id) {
+            document.getElementById('login').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('about').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+            if(id !== 'login') document.getElementById('navbar').classList.remove('hidden');
+            else document.getElementById('navbar').classList.add('hidden');
+        }
+
+        // Real-time Timetable Logic
+        function detectLiveSubject(facultySubject) {
+            const now = new Date();
+            const day = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+            const hour = now.getHours();
+            let detected = facultySubject; // Default fallback
+
+            // Simplified mapping based on timetable image logic
+            if(day >= 1 && day <= 6) {
+                if(hour >= 8 && hour < 10 && day === 5) detected = "DLD LAB";
+                else if(hour >= 13 && hour < 14) detected = "LUNCH";
+                // System dynamically trusts faculty's assigned subject from DB for simplicity in demo,
+                // but updates UI to reflect live status.
+            }
+            document.getElementById('currentSubject').innerText = detected;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentUser = data;
+                    document.getElementById('facultyName').innerText = data.name;
+                    detectLiveSubject(data.subject);
+                    fetchStudents();
+                    showSection('dashboard');
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) { console.error(err); alert("Login failed. Check server connection."); }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            showSection('login');
+        }
+
+        async function fetchStudents() {
+            const res = await fetch('/api/students');
+            studentsData = await res.json();
+            renderStudents();
+        }
+
+        function renderStudents() {
+            const tbody = document.getElementById('studentList');
+            tbody.innerHTML = '';
+            studentsData.forEach(s => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition" id="row-${s.roll_no}">
+                        <td class="p-4 font-semibold text-slate-700">${s.roll_no}</td>
+                        <td class="p-4">${s.name}</td>
+                        <td class="p-4 text-center">
+                            <select id="status-${s.roll_no}" class="border rounded px-2 py-1 outline-none text-sm font-medium
+                                ${s.status === 'Present' ? 'bg-green-50 text-green-700 border-green-200' : 
+                                  s.status === 'Absent' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-white'}">
+                                <option value="Present" ${s.status === 'Present' ? 'selected' : ''}>Present</option>
+                                <option value="Absent" ${s.status === 'Absent' ? 'selected' : ''}>Absent</option>
+                            </select>
+                        </td>
+                        <td class="p-4 text-center">
+                            <button onclick="openEmailModal(${s.roll_no}, '${s.name}')" class="text-indigo-500 hover:text-indigo-700 transition" title="Email Attendance Card">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Web Speech API for Voice to Text Attendance
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+                console.log("Heard:", transcript);
+                
+                // Extract numbers from speech (e.g., "Roll number 12", "Present 45")
+                const numbers = transcript.match(/\d+/g);
+                if (numbers) {
+                    numbers.forEach(num => {
+                        const roll = parseInt(num);
+                        const selectEl = document.getElementById(`status-${roll}`);
+                        if (selectEl) {
+                            selectEl.value = 'Present';
+                            selectEl.className = "border rounded px-2 py-1 outline-none text-sm font-medium bg-green-50 text-green-700 border-green-200";
+                            document.getElementById(`row-${roll}`).classList.add('bg-green-50');
+                            setTimeout(() => document.getElementById(`row-${roll}`).classList.remove('bg-green-50'), 1000);
+                        }
+                    });
+                }
+            };
+        }
+
+        function toggleVoice() {
+            if (!recognition) return alert("Web Speech API not supported in this browser.");
+            const btn = document.getElementById('micBtn');
+            const icon = btn.querySelector('i');
+            
+            if (isListening) {
+                recognition.stop();
+                btn.classList.remove('mic-active');
+                icon.classList.remove('fa-microphone-lines');
+                icon.classList.add('fa-microphone');
+            } else {
+                recognition.start();
+                btn.classList.add('mic-active');
+                icon.classList.remove('fa-microphone');
+                icon.classList.add('fa-microphone-lines');
+            }
+            isListening = !isListening;
+        }
+
+        async function saveAttendance() {
+            const records = studentsData.map(s => ({
+                roll_no: s.roll_no,
+                status: document.getElementById(`status-${s.roll_no}`).value
+            }));
+            
+            const res = await fetch('/api/attendance', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject: currentUser.subject, records })
+            });
+            const data = await res.json();
+            if(data.success) alert("Attendance saved successfully!");
+            else alert("Error saving attendance.");
+        }
+
+        function exportCSV() {
+            window.location.href = `/api/export?subject=${encodeURIComponent(currentUser.subject)}`;
+        }
+
+        // Email Modal Logic
+        function openEmailModal(roll_no, name) {
+            activeRollForEmail = roll_no;
+            document.getElementById('modalStudentName').innerText = `Sending card for ${name} (Roll: ${roll_no})`;
+            document.getElementById('emailModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('emailModal').classList.add('hidden');
+            document.getElementById('studentEmail').value = '';
+            activeRollForEmail = null;
+        }
+
+        async function sendEmailCard() {
+            const email = document.getElementById('studentEmail').value;
+            if(!email) return alert("Please enter an email address.");
+            
+            await fetch('/api/send_card', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roll_no: activeRollForEmail, email: email })
+            });
+            
+            alert(`Attendance card sent successfully to ${email}`);
+            closeModal();
+        }
+    </script>
+</body>
+</html>
