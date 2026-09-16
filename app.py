@@ -1,7 +1,10 @@
 import os
 import csv
+import random
+import requests
 import psycopg2
 from io import StringIO
+from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory, Response
 from dotenv import load_dotenv
 
@@ -10,6 +13,9 @@ load_dotenv()
 app = Flask(__name__, static_folder='.')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret')
 NEON_DB_STRING = os.getenv('NEON_DB_STRING')
+
+# Store OTPs temporarily in memory
+OTP_STORE = {}
 
 STUDENTS = [
     "MANYATA ACHARYA", "OWAIS AHMAD", "PRIYANSHU ARYA", "AYUSHI BASTIA", "RUDRANARAYAN BEHERA", "AMAR KUMAR BEHERA",
@@ -50,6 +56,37 @@ try:
 except Exception as e:
     print("DB Init Error:", e)
 
+def send_email_otp(to_email, otp):
+    api_key = os.getenv('BREVO_API_KEY')
+    if not api_key:
+        print("Missing BREVO_API_KEY environment variable")
+        return False
+        
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "content-type": "application/json"
+    }
+    
+    data = {
+        "sender": {"name": "AMS System", "email": "noreply@attendance-system.com"},
+        "to": [{"email": to_email}],
+        "subject": "AMS Faculty Login OTP",
+        "htmlContent": f"<html><body><h2>Faculty Login Verification</h2><p>Your OTP is: <strong style='font-size:20px; color:#4f46e5;'>{otp}</strong></p><p>This code is valid for 5 minutes.</p></body></html>"
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code in [201, 202]:
+            return True
+        else:
+            print("Brevo API Error:", response.text)
+            return False
+    except Exception as e:
+        print("Failed to connect to Brevo API:", e)
+        return False
+
 @app.route('/')
 def serve_index():
     return send_from_directory('.', 'index.html')
@@ -74,17 +111,54 @@ def register():
         cur.close()
         conn.close()
 
-@app.route('/api/login', methods=['POST'])
-def login():
+@app.route('/api/request-otp', methods=['POST'])
+def request_otp():
     data = request.json
+    email = data.get('email')
+    
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT name, subject FROM faculty WHERE email = %s AND password = %s", (data['email'], data['password']))
+    cur.execute("SELECT id FROM faculty WHERE email = %s", (email,))
     user = cur.fetchone()
     cur.close()
     conn.close()
-    if user: return jsonify({"success": True, "name": user[0], "subject": user[1]})
-    return jsonify({"success": False, "message": "Invalid credentials"}), 401
+    
+    if not user:
+        return jsonify({"success": False, "message": "Email not registered. Please sign up."}), 404
+        
+    otp = str(random.randint(100000, 999999))
+    OTP_STORE[email] = {
+        "otp": otp,
+        "expiry": datetime.now() + timedelta(minutes=5)
+    }
+    
+    if send_email_otp(email, otp):
+        return jsonify({"success": True, "message": "OTP sent to your email!"})
+    return jsonify({"success": False, "message": "Failed to send OTP email. Please try again."}), 500
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    email = data.get('email')
+    otp = data.get('otp')
+    
+    stored_data = OTP_STORE.get(email)
+    if not stored_data or stored_data['otp'] != otp:
+        return jsonify({"success": False, "message": "Invalid or incorrect OTP"}), 401
+    if datetime.now() > stored_data['expiry']:
+        return jsonify({"success": False, "message": "OTP has expired"}), 401
+        
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT name, subject FROM faculty WHERE email = %s", (email,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    if user:
+        del OTP_STORE[email]
+        return jsonify({"success": True, "name": user[0], "subject": user[1]})
+    return jsonify({"success": False, "message": "User not found"}), 404
 
 @app.route('/api/students', methods=['GET'])
 def get_students():
@@ -131,7 +205,9 @@ def export_csv():
 @app.route('/api/send_card', methods=['POST'])
 def send_card():
     data = request.json
-    return jsonify({"success": True, "message": f"Card sent to {data['email']}"})
+    email = data.get('email')
+    
+    return jsonify({"success": True, "message": f"Card successfully queued for {email}"})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
